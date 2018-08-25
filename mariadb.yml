@@ -1,0 +1,46 @@
+- hosts: mariadb-update
+  tasks:
+    - name: backup db
+      shell: /usr/bin/mysqldump -uadmin -p`< /etc/psa/.psa.shadow ` --all-databases | gzip > /root/mysql.all.dump.sql.gz
+
+    - name: remove old repo
+      shell: /usr/bin/rm -fr /etc/yum.repos.d/MariaDB.repo
+
+    - name: copy 10.3 mariadb repo
+      template:
+         src: MariaDB.repo
+         dest: /etc/yum.repos.d/
+
+    - name: mariadb stop
+      systemd:
+        name: mariadb
+        state: stopped
+
+    - name: set remove mariadb without dep
+      shell: /usr/bin/rpm -e --nodeps `rpm -q --whatprovides mariadb`
+
+    - name: check mariadb is removed
+      yum:
+         name: mariadb
+         state: absent
+
+    - name: install mariadb
+      yum:
+         name:
+            - MariaDB-server
+            - MariaDB-client
+         state: present 
+
+
+    - name: mariadb start
+      service:
+        name: mariadb
+        state: started
+
+    - name: chk on mariadb
+      shell: /usr/sbin/chkconfig mariadb on
+
+    - name: update db tables
+      shell: /usr/bin/mysql_upgrade -uadmin -p`< /etc/psa/.psa.shadow `
+      
+
