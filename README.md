@@ -1,2 +1,1 @@
-# ansible_repo
 # plesk_cento7_mariadb_update_to_10.3_Ansible_playbook
